@@ -1,12 +1,11 @@
 package com.skillforge.authservice.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
-public class AuthResponse {
-    private Long id;
-    private String accessToken;
-
+public record AuthResponse(
+        String message,
+        Long id,
+        String email,
+        String tokenType,
+        long expiresIn,
+        String accessToken
+) {
 }

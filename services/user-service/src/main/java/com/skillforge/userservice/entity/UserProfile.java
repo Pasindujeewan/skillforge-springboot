@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "user_profiles")
@@ -14,7 +15,7 @@ import java.time.Instant;
 public class UserProfile {
 
     @Id
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false, length = 30, unique = true)
     private String username;
@@ -35,7 +36,7 @@ public class UserProfile {
     private Instant updatedAt;
 
     public UserProfile(
-            Long id,
+            UUID id,
             String username,
             String displayName,
             String bio,

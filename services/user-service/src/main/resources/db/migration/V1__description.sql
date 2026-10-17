@@ -1,5 +1,5 @@
 CREATE TABLE user_profiles (
-                               id BIGINT PRIMARY KEY,
+                               id UUID PRIMARY KEY,
                                username VARCHAR(30) NOT NULL,
                                display_name VARCHAR(80) NOT NULL,
                                bio VARCHAR(500),

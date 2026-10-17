@@ -3,9 +3,10 @@ package com.skillforge.userservice.dto;
 import com.skillforge.userservice.entity.UserProfile;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record ProfileResponse(
-        Long id,
+        UUID id,
         String username,
         String displayName,
         String bio,

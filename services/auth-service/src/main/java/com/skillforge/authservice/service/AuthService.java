@@ -3,6 +3,8 @@ package com.skillforge.authservice.service;
 import com.skillforge.authservice.dto.AuthResponse;
 import com.skillforge.authservice.dto.LoginRequest;
 import com.skillforge.authservice.dto.RegisterRequest;
+import com.skillforge.authservice.dto.RegistrationResponse;
+import com.skillforge.authservice.client.UserProfileClient;
 import com.skillforge.authservice.entity.AuthUser;
 import com.skillforge.authservice.repository.AuthUserRepository;
 import com.skillforge.authservice.security.JwtService;
@@ -22,9 +24,10 @@ public class AuthService {
     private final AuthUserRepository authUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserProfileClient userProfileClient;
 
     @Transactional
-    public void register(RegisterRequest request) {
+    public RegistrationResponse register(RegisterRequest request) {
 
         if (authUserRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyRegisteredException(
@@ -40,7 +43,13 @@ public class AuthService {
         );
 
         try {
-            authUserRepository.saveAndFlush(user);
+            AuthUser savedUser = authUserRepository.saveAndFlush(user);
+            userProfileClient.createProfile(savedUser, request);
+            return new RegistrationResponse(
+                    "Registration successful",
+                    savedUser.getId(),
+                    savedUser.getEmail()
+            );
         } catch (DataIntegrityViolationException exception) {
             throw new EmailAlreadyRegisteredException(
                     "Email is already registered",
@@ -76,6 +85,13 @@ public class AuthService {
                 user.getEmail()
         );
 
-        return new AuthResponse(user.getId(), token);
+        return new AuthResponse(
+                "Login successful",
+                user.getId(),
+                user.getEmail(),
+                "Bearer",
+                jwtService.getExpirationInSeconds(),
+                token
+        );
     }
 }

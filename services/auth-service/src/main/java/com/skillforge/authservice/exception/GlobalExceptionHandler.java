@@ -56,6 +56,27 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(ProfileProvisioningException.class)
+    public ResponseEntity<ErrorResponse> handleProfileProvisioningFailure(
+            ProfileProvisioningException ex,
+            HttpServletRequest request
+    ) {
+        log.error("Profile creation failed during registration", ex);
+        return buildResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Registration could not be completed because the profile service is unavailable",
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(ProfileConflictException.class)
+    public ResponseEntity<ErrorResponse> handleProfileConflict(
+            ProfileConflictException ex,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException ex,

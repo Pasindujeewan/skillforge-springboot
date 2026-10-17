@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class UserProfileService {
     private final UserProfileRepository repository;
 
     @Transactional(readOnly = true)
-    public ProfileResponse getProfile(Long id) {
+    public ProfileResponse getProfile(UUID id) {
         UserProfile profile = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -34,7 +35,7 @@ public class UserProfileService {
 
     @Transactional
     public ProfileResponse updateProfile(
-            Long id,
+            UUID id,
             ProfileRequest request
     ) {
         UserProfile profile = repository.findById(id)

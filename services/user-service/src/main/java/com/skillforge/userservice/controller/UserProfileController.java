@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,7 +25,7 @@ public class UserProfileController {
     public ProfileResponse getMyProfile(
             JwtAuthenticationToken authentication
     ) {
-        Long userId = Long.valueOf(authentication.getToken().getSubject());
+        UUID userId = profileIdFor(authentication.getToken().getSubject());
 
         return profileService.getProfile(userId);
     }
@@ -33,15 +35,21 @@ public class UserProfileController {
             JwtAuthenticationToken authentication,
             @Valid @RequestBody ProfileRequest request
     ) {
-        Long userId = Long.valueOf(authentication.getToken().getSubject());
+        UUID userId = profileIdFor(authentication.getToken().getSubject());
 
         return profileService.updateProfile(userId, request);
     }
 
     @GetMapping("/public/{id}")
     public ProfileResponse getPublicProfile(
-            @PathVariable Long id
+            @PathVariable UUID id
     ) {
         return profileService.getProfile(id);
+    }
+
+    private UUID profileIdFor(String authUserId) {
+        return UUID.nameUUIDFromBytes(
+                ("skillforge-user:" + authUserId).getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

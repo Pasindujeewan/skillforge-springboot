@@ -18,6 +18,10 @@ public class JwtService {
     @Value("${security.jwt.expiration}")
     private long expiration;
 
+    public long getExpirationInSeconds() {
+        return expiration / 1000;
+    }
+
     public String generateToken(Long userId, String email) {
 
         Date issuedAt = new Date();

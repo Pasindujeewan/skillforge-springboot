@@ -3,6 +3,7 @@ package com.skillforge.authservice.controller;
 import com.skillforge.authservice.dto.AuthResponse;
 import com.skillforge.authservice.dto.LoginRequest;
 import com.skillforge.authservice.dto.RegisterRequest;
+import com.skillforge.authservice.dto.RegistrationResponse;
 import com.skillforge.authservice.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,15 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(
+    public ResponseEntity<RegistrationResponse> register(
             @Valid @RequestBody RegisterRequest request
     ) {
 
-        authService.register(request);
+        RegistrationResponse response = authService.register(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .build();
+                .body(response);
     }
 
     @PostMapping("/login")
