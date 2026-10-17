@@ -29,7 +29,7 @@ public class JwtService {
                 .claim("email", email)
                 .issuedAt(issuedAt)
                 .expiration(expirationDate)
-                .signWith(jwtSecretKey)
+                .signWith(jwtSecretKey, Jwts.SIG.HS256)
                 .compact();
     }
 

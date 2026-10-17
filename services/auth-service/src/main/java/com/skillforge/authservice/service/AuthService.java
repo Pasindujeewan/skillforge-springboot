@@ -9,6 +9,11 @@ import com.skillforge.authservice.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.skillforge.authservice.exception.EmailAlreadyRegisteredException;
+import com.skillforge.authservice.exception.InvalidCredentialsException;
 
 @Service
 @RequiredArgsConstructor
@@ -18,10 +23,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    @Transactional
     public void register(RegisterRequest request) {
 
         if (authUserRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException(
+            throw new EmailAlreadyRegisteredException(
                     "Email is already registered"
             );
         }
@@ -33,7 +39,14 @@ public class AuthService {
                 passwordEncoder.encode(request.getPassword())
         );
 
-        authUserRepository.save(user);
+        try {
+            authUserRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new EmailAlreadyRegisteredException(
+                    "Email is already registered",
+                    exception
+            );
+        }
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -41,7 +54,7 @@ public class AuthService {
         AuthUser user = authUserRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new InvalidCredentialsException(
                                 "Invalid email or password"
                         )
                 );
@@ -53,7 +66,7 @@ public class AuthService {
                 );
 
         if (!passwordMatches) {
-            throw new IllegalArgumentException(
+            throw new InvalidCredentialsException(
                     "Invalid email or password"
             );
         }
