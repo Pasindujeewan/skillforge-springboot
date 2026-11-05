@@ -20,10 +20,12 @@ public class UserProfileClient {
     private final JwtService jwtService;
 
     public UserProfileClient(
-            @Value("${user-service.base-url}") String baseUrl,
+            RestClient.Builder builder,
             JwtService jwtService
     ) {
-        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        this.restClient = builder
+                .baseUrl("http://USER-SERVICE")
+                .build();
         this.jwtService = jwtService;
     }
 
