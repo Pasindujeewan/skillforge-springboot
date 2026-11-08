@@ -6,6 +6,7 @@ import com.skillforge.authservice.exception.ProfileProvisioningException;
 import com.skillforge.authservice.exception.ProfileConflictException;
 import com.skillforge.authservice.security.JwtService;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -19,7 +20,7 @@ public class UserProfileClient {
     private final JwtService jwtService;
 
     public UserProfileClient(
-            RestClient.Builder builder,
+            @Qualifier("loadBalancedRestClientBuilder") RestClient.Builder builder,
             JwtService jwtService
     ) {
         this.restClient = builder
