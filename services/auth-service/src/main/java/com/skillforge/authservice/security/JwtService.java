@@ -5,18 +5,23 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Service
-@RequiredArgsConstructor
 public class JwtService {
-
     private final SecretKey jwtSecretKey;
 
     @Value("${security.jwt.expiration}")
     private long expiration;
+
+    public JwtService( @Qualifier("userJwtSecretKey")
+                       SecretKey jwtSecretKey){
+        this.jwtSecretKey = jwtSecretKey;
+    }
 
     public long getExpirationInSeconds() {
         return expiration / 1000;

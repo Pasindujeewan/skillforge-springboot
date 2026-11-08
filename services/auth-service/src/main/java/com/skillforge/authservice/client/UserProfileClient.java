@@ -5,8 +5,8 @@ import com.skillforge.authservice.entity.AuthUser;
 import com.skillforge.authservice.exception.ProfileProvisioningException;
 import com.skillforge.authservice.exception.ProfileConflictException;
 import com.skillforge.authservice.security.JwtService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -20,15 +20,17 @@ public class UserProfileClient {
     private final JwtService jwtService;
 
     public UserProfileClient(
-            @Value("${user-service.base-url}") String baseUrl,
+            @Qualifier("loadBalancedRestClientBuilder") RestClient.Builder builder,
             JwtService jwtService
     ) {
-        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        this.restClient = builder
+                .baseUrl("http://USER-SERVICE")
+                .build();
         this.jwtService = jwtService;
     }
 
-    public void createProfile(AuthUser user, RegisterRequest request) {
-        String internalToken = jwtService.generateToken(user.getId(), user.getEmail());
+    public void createProfile(Long userId, String email, RegisterRequest request) {
+        String internalToken = jwtService.generateToken(userId, email);
         UserProfileProvisionRequest profile = new UserProfileProvisionRequest(
                 request.getUsername(),
                 request.getDisplayName(),
@@ -58,6 +60,31 @@ public class UserProfileClient {
         } catch (RestClientException exception) {
             throw new ProfileProvisioningException(
                     "Could not create the user profile",
+                    exception
+            );
+        }
+    }
+
+    public void deleteProfile(AuthUser user) {
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+
+        try {
+            restClient.delete()
+                    .uri("/api/users/me")
+                    .header("Authorization", "Bearer " + token)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException exception) {
+            if (exception.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                return;
+            }
+            throw new ProfileProvisioningException(
+                    "Could not delete the user profile during compensation",
+                    exception
+            );
+        } catch (RestClientException exception) {
+            throw new ProfileProvisioningException(
+                    "Could not delete the user profile during compensation",
                     exception
             );
         }

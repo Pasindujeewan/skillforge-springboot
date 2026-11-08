@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -38,6 +39,15 @@ public class UserProfileController {
         UUID userId = profileIdFor(authentication.getToken().getSubject());
 
         return profileService.updateProfile(userId, request);
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyProfile(
+            JwtAuthenticationToken authentication
+    ) {
+        UUID userId = profileIdFor(authentication.getToken().getSubject());
+        profileService.deleteProfile(userId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/public/{id}")

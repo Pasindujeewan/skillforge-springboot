@@ -69,6 +69,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(RegistrationSagaException.class)
+    public ResponseEntity<ErrorResponse> handleRegistrationSagaFailure(
+            RegistrationSagaException ex,
+            HttpServletRequest request
+    ) {
+        log.error("Registration failed and compensation is pending", ex);
+        return buildResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Registration could not be completed; cleanup is pending",
+                request.getRequestURI()
+        );
+    }
+
     @ExceptionHandler(ProfileConflictException.class)
     public ResponseEntity<ErrorResponse> handleProfileConflict(
             ProfileConflictException ex,
