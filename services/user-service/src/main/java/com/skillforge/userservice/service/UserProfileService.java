@@ -79,4 +79,9 @@ public class UserProfileService {
             );
         }
     }
+
+    @Transactional
+    public void deleteProfile(UUID id) {
+        repository.deleteById(id);
+    }
 }
