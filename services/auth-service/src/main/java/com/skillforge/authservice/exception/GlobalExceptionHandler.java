@@ -69,6 +69,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UserServiceCircuitBreakerOpenException.class)
+    public ResponseEntity<ErrorResponse> handleUserServiceCircuitBreakerOpen(
+            UserServiceCircuitBreakerOpenException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("User service circuit breaker is open: {}", ex.getMessage());
+        return buildResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "User service is temporarily unavailable; please retry shortly",
+                request.getRequestURI()
+        );
+    }
+
     @ExceptionHandler(RegistrationSagaException.class)
     public ResponseEntity<ErrorResponse> handleRegistrationSagaFailure(
             RegistrationSagaException ex,
