@@ -47,6 +47,10 @@ Request:
 | `bio` | No | At most 500 characters |
 | `avatarUrl` | No | At most 500 characters |
 
+New accounts receive the `STUDENT` role by default. Registration does not
+accept a role field; elevated roles must be assigned through a trusted
+administrative process.
+
 Created response (`201 Created`):
 
 ```json
@@ -112,6 +116,9 @@ Successful response (`200 OK`):
 
 The configured token lifetime is 900 seconds (15 minutes). Invalid credentials
 return `401 Unauthorized`; invalid request data returns `400 Bad Request`.
+The signed JWT includes the account role in its `role` claim (for example,
+`"role": "STUDENT"`). Protected services expose that claim as the
+`ROLE_STUDENT`, `ROLE_INSTRUCTOR`, or `ROLE_ADMIN` Spring Security authority.
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \

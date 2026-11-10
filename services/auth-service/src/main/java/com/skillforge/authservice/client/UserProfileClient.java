@@ -4,6 +4,9 @@ import com.skillforge.authservice.dto.RegisterRequest;
 import com.skillforge.authservice.entity.AuthUser;
 import com.skillforge.authservice.exception.ProfileProvisioningException;
 import com.skillforge.authservice.exception.ProfileConflictException;
+import com.skillforge.authservice.exception.UserServiceCircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import com.skillforge.authservice.security.JwtService;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,15 +21,18 @@ public class UserProfileClient {
 
     private final RestClient restClient;
     private final JwtService jwtService;
+    private final CircuitBreaker circuitBreaker;
 
     public UserProfileClient(
             @Qualifier("loadBalancedRestClientBuilder") RestClient.Builder builder,
-            JwtService jwtService
+            JwtService jwtService,
+            CircuitBreaker userServiceCircuitBreaker
     ) {
         this.restClient = builder
                 .baseUrl("http://USER-SERVICE")
                 .build();
         this.jwtService = jwtService;
+        this.circuitBreaker = userServiceCircuitBreaker;
     }
 
     public void createProfile(Long userId, String email, RegisterRequest request) {
@@ -39,13 +45,14 @@ public class UserProfileClient {
         );
 
         try {
-            restClient.put()
-                    .uri("/api/users/me")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + internalToken)
-                    .body(profile)
-                    .retrieve()
-                    .toBodilessEntity();
+            executeWithCircuitBreaker(() -> restClient.put()
+                            .uri("/api/users/me")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("Authorization", "Bearer " + internalToken)
+                            .body(profile)
+                            .retrieve()
+                            .toBodilessEntity(),
+                    "create the user profile");
         } catch (RestClientResponseException exception) {
             if (exception.getStatusCode().equals(HttpStatus.CONFLICT)) {
                 throw new ProfileConflictException(
@@ -69,11 +76,12 @@ public class UserProfileClient {
         String token = jwtService.generateToken(user.getId(), user.getEmail());
 
         try {
-            restClient.delete()
-                    .uri("/api/users/me")
-                    .header("Authorization", "Bearer " + token)
-                    .retrieve()
-                    .toBodilessEntity();
+            executeWithCircuitBreaker(() -> restClient.delete()
+                            .uri("/api/users/me")
+                            .header("Authorization", "Bearer " + token)
+                            .retrieve()
+                            .toBodilessEntity(),
+                            "delete the user profile during compensation");
         } catch (RestClientResponseException exception) {
             if (exception.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 return;
@@ -85,6 +93,17 @@ public class UserProfileClient {
         } catch (RestClientException exception) {
             throw new ProfileProvisioningException(
                     "Could not delete the user profile during compensation",
+                    exception
+            );
+        }
+    }
+
+    private void executeWithCircuitBreaker(Runnable operation, String action) {
+        try {
+            circuitBreaker.executeRunnable(operation);
+        } catch (CallNotPermittedException exception) {
+            throw new UserServiceCircuitBreakerOpenException(
+                    "User service circuit breaker is open; cannot " + action,
                     exception
             );
         }
