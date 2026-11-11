@@ -102,6 +102,8 @@ public class AuthUserCommandService {
             throw new IllegalStateException("Registration saga is not compensating");
         }
 
+        saga.clearAuthUserReference();
+        sagaRepository.saveAndFlush(saga);
         authUserRepository.deleteById(authUserId);
         authUserRepository.flush();
         saga.compensated();

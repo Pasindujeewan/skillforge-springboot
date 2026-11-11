@@ -71,6 +71,10 @@ public class RegistrationSaga {
         this.status = RegistrationSagaStatus.COMPENSATING;
     }
 
+    public void clearAuthUserReference() {
+        this.authUserId = null;
+    }
+
     public void compensationFailed(Throwable failure) {
         this.status = RegistrationSagaStatus.COMPENSATION_FAILED;
         this.failureReason = failure.getClass().getSimpleName();
